@@ -22,17 +22,20 @@ logs as a backup). No database to manage.
 
 ## Settings you provide on Vercel (Environment Variables)
 
+Emails are sent through Gmail using an app password (the same setup used elsewhere).
+
 | Name | What it's for | Example |
 |------|----------------|---------|
-| `RESEND_API_KEY` | Lets the site send you emails (from resend.com) | `re_xxx…` |
-| `LEAD_FROM_EMAIL` | The "from" address on those emails — must be a sender on a domain you've verified in Resend | `RavenSeek <leads@ravenseek.com>` |
+| `GMAIL_USER` | The Gmail address that sends the notification | `ravenschest33@gmail.com` |
+| `GMAIL_APP_PASSWORD` | A Google **app password** (not your normal password) | `abcd efgh ijkl mnop` |
 | `SEEK_LEAD_EMAIL` | Where leads are sent (optional — defaults to ravenschest33@gmail.com) | `ravenschest33@gmail.com` |
 
-### Email setup, once (5 minutes)
-1. Make a free account at [resend.com](https://resend.com).
-2. Add & verify your domain `ravenseek.com` (Resend walks you through the DNS records).
-3. Create an API key → paste it into Vercel as `RESEND_API_KEY`.
-4. Set `LEAD_FROM_EMAIL` to something like `RavenSeek <leads@ravenseek.com>`.
+### Email setup, once
+1. If you don't already have one, create a Google **App Password**:
+   Google Account → Security → 2-Step Verification → **App passwords** → generate one.
+2. In Vercel → this project → **Settings → Environment Variables**, add `GMAIL_USER`
+   (your Gmail address) and `GMAIL_APP_PASSWORD` (the app password).
+3. Redeploy.
 
 Until that's done, leads are still captured in the Vercel logs — you just won't
 get the email.

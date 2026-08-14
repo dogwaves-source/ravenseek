@@ -1,10 +1,8 @@
 import { NextResponse } from "next/server";
+import nodemailer from "nodemailer";
 
 // Where lead notifications are sent. Override with SEEK_LEAD_EMAIL.
 const NOTIFY_EMAIL = process.env.SEEK_LEAD_EMAIL || "ravenschest33@gmail.com";
-// Verified Resend sender. Set LEAD_FROM_EMAIL to a sender on your verified
-// domain (e.g. "RavenSeek <leads@ravenseek.com>") once the domain is verified.
-const FROM_EMAIL = process.env.LEAD_FROM_EMAIL || "RavenSeek <onboarding@resend.dev>";
 
 const SERVICE_LABELS: Record<string, string> = {
   "estate-consultation": "Estate Consultation",
@@ -57,26 +55,27 @@ export async function POST(request: Request) {
     // Always log — a durable backup in the Vercel logs even if email is down.
     console.log(`[RavenSeek lead] ${label} — ${name} <${email}>\n${text}`);
 
-    // Email notification (best-effort — never fails the visitor's submission).
-    if (process.env.RESEND_API_KEY) {
+    // Email notification via Gmail (best-effort — never fails the visitor's submission).
+    const gmailUser = process.env.GMAIL_USER;
+    const gmailPass = process.env.GMAIL_APP_PASSWORD;
+    if (gmailUser && gmailPass) {
       try {
-        const { Resend } = await import("resend");
-        const resend = new Resend(process.env.RESEND_API_KEY);
-        const result = await resend.emails.send({
-          from: FROM_EMAIL,
+        const transporter = nodemailer.createTransport({
+          service: "gmail",
+          auth: { user: gmailUser, pass: gmailPass },
+        });
+        await transporter.sendMail({
+          from: `RavenSeek <${gmailUser}>`,
           to: NOTIFY_EMAIL,
           replyTo: email,
           subject: `New RavenSeek ${label} lead — ${name}`,
           text,
         });
-        if ("error" in result && result.error) {
-          console.error("RavenSeek lead email failed (lead is in logs):", result.error);
-        }
       } catch (mailErr) {
-        console.error("RavenSeek lead email threw (lead is in logs):", mailErr);
+        console.error("RavenSeek lead email failed (lead is in logs):", mailErr);
       }
     } else {
-      console.warn("RESEND_API_KEY not set — lead captured in logs only, no email sent.");
+      console.warn("GMAIL_USER / GMAIL_APP_PASSWORD not set — lead captured in logs only, no email sent.");
     }
 
     return NextResponse.json({ ok: true });
